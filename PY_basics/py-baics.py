@@ -1,7 +1,18 @@
-# print(3+2)
-# print (3*4)
-# print(22/2)
-print (type((9.8,4,2)))
-print (4 % 2)
-print (type({'name':'Riri'}))
+>>> def linear_search (arr,target):
+...     for i in range (len (arr)):
+...         if arr [i] == target:
+...             return i    # found, return index
+...
+...             return -1   # Not found
+...
+>>> arr= [10,20,30,40,50]
+>>>
+>>> arr= [10,20,30,40,50]
+>>>
+>>> target=40
+>>> print (linear_search (arr,target))
+3
+>>>
+
+
 
