@@ -1,34 +1,112 @@
-def merge_sort(arr):
-    if len(arr) > 1:
-        mid = len(arr) // 2
-        left_half = arr[:mid]
-        right_half = arr[mid:]
+import sqlite3
 
-        merge_sort(left_half)
-        merge_sort(right_half)
 
-        i = j = k = 0
+def main():
+    print("SQLite example")
+    db = None   # satisfy the warnings monster
+    cur = None
 
-        while i < len(left_half) and j < len(right_half):
-            if left_half[i] < right_half[j]:
-                arr[k] = left_half[i]
-                i += 1
-            else:
-                arr[k] = right_half[j]
-                j += 1
-            k += 1
+    try:
+        # using SQLite's transient in-memory database
+        db = sqlite3.connect(":memory:")
+        cur = db.cursor()
+        print("connected")
 
-        while i < len(left_half):
-            arr[k] = left_half[i]
-            i += 1
-            k += 1
+    except sqlite3.Error as e:
+        print(f"could not open database: {e}")
+        exit(1)
 
-        while j < len(right_half):
-            arr[k] = right_half[j]
-            j += 1
-            k += 1
+    try:
+        # create a table
+        sql_create = '''
+            CREATE TABLE IF NOT EXISTS hello (
+                id INTEGER PRIMARY KEY,
+                a TEXT,
+                b TEXT,
+                c TEXT 
+            ) 
+        '''
+        cur.execute(sql_create)
+        print("table created")
 
-# Example usage
-arr = [8,7,6,5,4,3,2,1]
-merge_sort(arr)
-print("Sorted array is:", arr)
+    except sqlite3.Error as e:
+        print(f"could not create table: {e}")
+        exit(1)
+
+    try:
+        # insert rows into the table using executemany
+        print("inserting rows")
+        row_data = (
+            ('one', 'two', 'three'),
+            ('two', 'three', 'four'),
+            ('three', 'four', 'five'),
+            ('four', 'five', 'six'),
+            ('five', 'six', 'seven'),
+            ('six', 'seven', 'eight'),
+            ('seven', 'eight', 'nine'),
+            ('eight', 'nine', 'ten'),
+            ('nine', 'ten', 'eleven'),
+        )
+        cur.executemany("INSERT INTO hello (a, b, c) VALUES (?, ?, ?)", row_data)
+        count = cur.rowcount
+        cur.executemany("INSERT INTO hello (a, b, c) VALUES (?, ?, ?)", row_data)
+        count += cur.rowcount
+        cur.executemany("INSERT INTO hello (a, b, c) VALUES (?, ?, ?)", row_data)
+        count += cur.rowcount
+        print(f"{count} rows added")
+        db.commit()
+
+    except sqlite3.Error as e:
+        print(f"could not insert rows: {e}")
+        exit(1)
+
+    try:
+        # count rows using SELECT COUNT(*)
+        cur.execute("SELECT COUNT(*) FROM hello")
+        count = cur.fetchone()[0]
+        print(f"there are {count} rows in the table")
+
+        # get column names from SQLite meta-data table_info
+        cur.execute("PRAGMA table_info(hello);")
+        row = cur.fetchall()
+        colnames = [r[1] for r in row]
+        print(f"column names are: {colnames}")
+
+        # fetch rows using iterator
+        print('\nusing iterator')
+        cur.execute("SELECT * FROM hello LIMIT 5")
+        for row in cur:
+            print(row)
+
+        # fetch rows using row_factory
+        print('\nusing row_factory')
+        cur.execute("SELECT * FROM hello LIMIT 5")
+        cur.row_factory = sqlite3.Row
+        for row in cur:
+            print(f"as tuple: {tuple(row)}, as dict: id:{row['id']} a:{row['a']}, b:{row['b']}, c:{row['c']}")
+
+        cur.row_factory = None  # reset row factory
+
+        # fetch rows in groups of 5 using fetchmany
+        print('\ngroups of 5 using fetchmany')
+        cur.execute("SELECT * FROM hello")
+        rows = cur.fetchmany(5)
+        while rows:
+            for r in rows:
+                print(r)
+            print("====== ====== ======")
+            rows = cur.fetchmany(5)
+
+        # drop table and close the database
+        print('\ndrop table and close connection')
+        cur.execute("DROP TABLE IF EXISTS hello")  # cleanup if db is not :memory:
+        cur.close()
+        db.close()
+
+    except sqlite3.Error as e:
+        print(f"sqlite3 error: {e}")
+        exit(1)
+
+
+if __name__ == "__main__":
+    main()
