@@ -1,39 +1,9 @@
-#!/usr/bin/env python3
-# Copyright 2021 BHG [bw.org]
-# as of 2021-04-10 bw
+# Program to read a number and display its square, cube, and fourth power
 
-import mysql.connector as mysql
+# Read the number from the user
+num = float(input("Enter a number: "))
 
-
-MY_HOST = 'localhost'
-MY_USER = 'root'
-MY_PASS = 'Mama51ta123#'
-
-
-def main():
-    db = mysql.connect(host=MY_HOST, user=MY_USER, password=MY_PASS, database='scratch')
-    cur = db.cursor(prepared=True)
-
-    cur.execute("DROP TABLE IF EXISTS temp")
-    cur.execute("CREATE TABLE IF NOT EXISTS temp ( a TEXT, b TEXT, c TEXT )")
-    cur.execute("INSERT INTO temp VALUES ('one', 'two', 'three')")
-    cur.execute("INSERT INTO temp VALUES ('four', 'five', 'six')")
-    cur.execute("INSERT INTO temp VALUES ('seven', 'eight', 'nine')")
-
-    cur.execute("SELECT * FROM temp")
-    for row in cur:
-        print(row)
-
-    query = "SELECT * FROM temp WHERE a = ?"
-    cur.execute(query, ('four',))
-
-    for row in cur:
-        print(f"result is {row}")
-
-    cur.execute("DROP TABLE IF EXISTS temp")
-    cur.close()
-    db.close()
-
-
-if __name__ == "__main__":
-    main()
+# Calculate and display the powers
+print(num, "squared is", num * num)
+print(num, "cubed is", num * num * num)
+print(num, "to the fourth power is", num ** 4)
